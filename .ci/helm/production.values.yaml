@@ -1,5 +1,5 @@
 ingresses:
   web:
-    hostname: simple-service.k3scluster.tech
+    hostname: qwerty-service.k3scluster.tech
 
 public_env_variables: {}
