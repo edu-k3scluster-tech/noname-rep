@@ -2,4 +2,5 @@ ingresses:
   web:
     hostname: qwerty-service.k3scluster.tech
 
-public_env_variables: {}
+public_env_variables:
+  SIMPLE_SERVICE_API: http://simple-raspberrypi-service-production-simple-service-web.simple-raspberrypi-service-production.svc:8000/

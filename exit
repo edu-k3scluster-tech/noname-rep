@@ -1,0 +1,123 @@
+[33mtag v1.0[m
+Tagger: zemgh <bast3ran@yandex.ru>
+Date:   Sat Jan 11 22:13:46 2025 +0300
+
+release
+
+[33mcommit 88828eb051ca73f47de5e55380a023706f9109ca[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;33mtag: [m[1;33mv1.0[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: zemgh <bast3ran@yandex.ru>
+Date:   Sat Jan 11 19:23:28 2025 +0300
+
+    test
+
+[1mdiff --git a/.ci/helm/staging.values.yaml b/.ci/helm/staging.values.yaml[m
+[1mindex 84adae7..2c5c653 100644[m
+[1m--- a/.ci/helm/staging.values.yaml[m
+[1m+++ b/.ci/helm/staging.values.yaml[m
+[36m@@ -2,4 +2,5 @@[m [mingresses:[m
+   web:[m
+     hostname: qwerty-service.staging.k3scluster.tech[m
+ [m
+[31m-public_env_variables: {}[m
+[32m+[m[32mpublic_env_variables:[m
+[32m+[m[32m  SIMPLE_SERVICE_API: http://simple-raspberrypi-service-staging-simple-service-web.simple-raspberrypi-service-staging.svc:8000/[m
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 96c5380..f712570 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -168,4 +168,6 @@[m [mcython_debug/[m
+ .idea/[m
+ [m
+ # PyPI configuration file[m
+[31m-.pypirc[m
+\ No newline at end of file[m
+[32m+[m[32m.pypirc[m
+[32m+[m
+[32m+[m[32mttt.py[m
+\ No newline at end of file[m
+[1mdiff --git a/Dockerfile b/Dockerfile[m
+[1mindex 545e399..59971b0 100644[m
+[1m--- a/Dockerfile[m
+[1m+++ b/Dockerfile[m
+[36m@@ -1,5 +1,12 @@[m
+ FROM python:3.13-slim as base[m
+ [m
+[32m+[m[32mRUN apt-get update && apt-get install -y \[m
+[32m+[m[32m    gcc \[m
+[32m+[m[32m    libffi-dev \[m
+[32m+[m[32m    python3-dev \[m
+[32m+[m[32m    build-essential \[m
+[32m+[m[32m    && apt-get clean && rm -rf /var/lib/apt/lists/*[m
+[32m+[m
+ WORKDIR /app[m
+ [m
+ COPY uv.lock pyproject.toml .[m
+[1mdiff --git a/main.py b/main.py[m
+[1mindex 15c2285..2962565 100644[m
+[1m--- a/main.py[m
+[1m+++ b/main.py[m
+[36m@@ -1,5 +1,7 @@[m
+ import multiprocessing[m
+ import subprocess[m
+[32m+[m[32mimport aiohttp[m
+[32m+[m[32mimport os[m
+ [m
+ from fastapi import FastAPI[m
+ from prometheus_client import Counter[m
+[36m@@ -10,21 +12,38 @@[m [mapp = FastAPI()[m
+ hello_counter = Counter('hello_counter', documentation='test counter')[m
+ [m
+ instrumentator = Instrumentator().instrument(app)[m
+[31m-instrumentator.expose(app, endpoint="/metrics")[m
+[32m+[m[32minstrumentator.expose(app, endpoint='/metrics')[m
+ [m
+ [m
+ @app.get('/')[m
+ async def root():[m
+     hello_counter.inc(amount=1)[m
+[31m-    return {'service_status': "I'm fine"}[m
+[32m+[m[32m    return {'service status': "I'm fine"}[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@app.get('/test_api_request')[m
+[32m+[m[32masync def test_api_request():[m
+[32m+[m[32m    url = os.getenv('SIMPLE_SERVICE_API')[m
+[32m+[m
+[32m+[m[32m    async with aiohttp.ClientSession() as session:[m
+[32m+[m[32m        async with session.get(url) as response:[m
+[32m+[m[32m            if response.status == 200:[m
+[32m+[m[32m                return {'message from api': await response.json()}[m
+[32m+[m[32m            return {'error': response.status}[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@app.get('/test_secret')[m
+[32m+[m[32masync def test_api_request():[m
+[32m+[m[32m    secret = os.getenv('TEST_SECRET')[m
+[32m+[m
+[32m+[m[32m    return {'secret': secret}[m
+ [m
+ [m
+ def start_worker():[m
+     subprocess.run(['python', 'worker.py'])[m
+ [m
+ [m
+[31m-@app.on_event("startup")[m
+[32m+[m[32m@app.on_event('startup')[m
+ async def startup_event():[m
+     worker_process = multiprocessing.Process(target=start_worker)[m
+     worker_process.start()[m
+[31m-[m
+[1mdiff --git a/pyproject.toml b/pyproject.toml[m
+[1mindex 0ac2a7f..a227e87 100644[m
+[1m--- a/pyproject.toml[m
+[1m+++ b/pyproject.toml[m
+[36m@@ -8,7 +8,8 @@[m [mdependencies = [[m
+     "fastapi>=0.115.6",[m
+     "prometheus-fastapi-instrumentator>=7.0.0",[m
+     "ruff>=0.8.4",[m
+[31m-    "uvicorn>=0.34.0"[m
+[32m+[m[32m    "uvicorn>=0.34.0",[m
+[32m+[m[32m    "aiohttp>=3.11.11"[m
+ ][m
+ [m
+ [tool.ruff.lint][m
