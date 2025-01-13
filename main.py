@@ -24,7 +24,6 @@ async def root():
 @app.get('/test_api_request')
 async def test_api_request():
     url = os.getenv('SIMPLE_SERVICE_API')
-    print(url)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -35,7 +34,7 @@ async def test_api_request():
 
 @app.get('/test_secret')
 async def test_api_request():
-    secret = os.getenv('TEST_SECRET')
+    secret = os.getenv('QWERTY_SECRET')
 
     return {'secret': secret}
 
